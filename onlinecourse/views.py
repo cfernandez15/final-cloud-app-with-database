@@ -154,19 +154,23 @@ def show_exam_result(request, course_id, submission_id):
 def get_grade(questions, choices):
     total_grade_possible = 0
     total_grade = 0
+    incorrect_score = 0
+    correct_score = 0
+    
     for question in questions:
         total_grade_possible += question.grade
         question_grade = question.grade
-        print(total_grade_possible)
         correct_choices = question.choice_set.filter(is_correct = True).count()
         for choice in question.choice_set.all():
             if choice in choices:
                 if (choice.is_correct):
-                    total_grade += question_grade/correct_choices
+                    correct_score += question_grade/correct_choices
                 else:
-                    total_grade -= question_grade
-                    if total_grade < 0:
-                        total_grade = 0
+                    incorrect_score -= question_grade
+            else:
+                if choice.is_correct:
+                    incorrect_score -= question_grade/correct_choices
+    total_grade = incorrect_score + correct_score
     if (total_grade <= 0):
         grade = 0
     else:
