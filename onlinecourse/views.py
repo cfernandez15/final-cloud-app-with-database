@@ -175,5 +175,5 @@ def get_grade(questions, choices):
         grade = 0
     else:
         grade = total_grade/total_grade_possible
-    grade = 100 * grade
+    grade = int(100 * grade)
     return grade 
