@@ -157,15 +157,19 @@ def get_grade(questions, choices):
     for question in questions:
         total_grade_possible += question.grade
         question_grade = question.grade
+        print(total_grade_possible)
         correct_choices = question.choice_set.filter(is_correct = True).count()
-        for choice in question.choice_set.filter(is_correct = True):
+        for choice in question.choice_set.all():
             if choice in choices:
-                total_grade += question_grade/correct_choices
-            else:
-                total_grade -= question_grade/correct_choices
-    if (total_grade < 1):
+                if (choice.is_correct):
+                    total_grade += question_grade/correct_choices
+                else:
+                    total_grade -= question_grade
+                    if total_grade < 0:
+                        total_grade = 0
+    if (total_grade <= 0):
         grade = 0
     else:
         grade = total_grade/total_grade_possible
-    grade = int(100 * grade)
+    grade = 100 * grade
     return grade 
