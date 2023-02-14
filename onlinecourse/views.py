@@ -119,8 +119,8 @@ def submit(request, course_id):
     for id in choices_id:
         choice = Choice.objects.get(pk=id)
         submission.choices.add(choice)
-    submission.choices.all()
-    return HttpResponseRedirect(show_exam_result(request, course_id, submission.id))
+    submission.save()
+    return redirect('onlinecourse:show_exam_result',course_id=course_id, submission_id=submission.id)
 # <HINT> A example method to collect the selected choices from the exam form from the request object
 def extract_answers(request):
     submitted_anwsers = []
@@ -141,5 +141,31 @@ def extract_answers(request):
 def show_exam_result(request, course_id, submission_id):
     course = get_object_or_404(Course, pk=course_id)
     submission = get_object_or_404(Submission, pk=submission_id)
-    return print(course)
+    choices = submission.choices.all()
+    questions = course.question_set.all()
+    grade = get_grade(questions, choices)
+    context = {
+        "course": course,
+        "grade": grade,
+        "choices": choices
+    } 
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
 
+def get_grade(questions, choices):
+    total_grade_possible = 0
+    total_grade = 0
+    for question in questions:
+        total_grade_possible += question.grade
+        question_grade = question.grade
+        correct_choices = question.choice_set.filter(is_correct = True).count()
+        for choice in question.choice_set.filter(is_correct = True):
+            if choice in choices:
+                total_grade += question_grade/correct_choices
+            else:
+                total_grade -= question_grade/correct_choices
+    if (total_grade < 1):
+        grade = 0
+    else:
+        grade = total_grade/total_grade_possible
+    grade = int(100 * grade)
+    return grade 
